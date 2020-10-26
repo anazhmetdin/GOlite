@@ -1,7 +1,7 @@
 from keras.models import Sequential
-from keras.layers import Conv1D
-from keras.layers import Dense
+from keras.layers import Conv1D, Dense, GlobalMaxPooling1D
 from GOlite.generator import DataGenerator
+from keras import backend
 import glob
 
 
@@ -24,24 +24,36 @@ class CNNmodel():
         self.generate_dicts()
         self.build_model()
 
+    def fbeta(y_true, y_pred, beta=2):
+        # clip predictions
+        y_pred = backend.clip(y_pred, 0, 1)
+        # calculate elements
+        tp = backend.sum(backend.round(backend.clip(y_true * y_pred, 0, 1)), axis=1)
+        fp = backend.sum(backend.round(backend.clip(y_pred - y_true, 0, 1)), axis=1)
+        fn = backend.sum(backend.round(backend.clip(y_true - y_pred, 0, 1)), axis=1)
+        # calculate precision
+        p = tp / (tp + fp + backend.epsilon())
+        # calculate recall
+        r = tp / (tp + fn + backend.epsilon())
+        # calculate fbeta, averaged across each class
+        bb = beta ** 2
+        fbeta_score = backend.mean((1 + bb) * (p * r) / (bb * p + r + backend.epsilon()))
+        return fbeta_score
+
     def build_model(self):
         a = self.filterSize[0]
-        step = self.filterSize[1]
-        b = self.filterSize[2]
-        print(self.filters, type(self.filters))
-        print(a, type(a))
-        print(self.batchS, type(self.batchS))
-        print(self.dim[1], type(self.dim[1]))
+        step = self.filterSize[2]
+        b = self.filterSize[1]
         self.model.add(Conv1D(filters=self.filters, kernel_size=a,
                        strides=self.batchS, activation='relu',
-                       input_shape=(None, self.dim[1])))
+                       input_shape=(self.dim[1], 1)))
         for size in range(a+step, b+1, step):
             self.model.add(Conv1D(filters=self.filters, kernel_size=size,
                                   activation='relu'))
-        self.model.add(Dense(self.label_dim[1], activation='sigmoid'))
-        self.model.compile(optimizer='adam',
-                           loss='categorical_crossentropy',
-                           metrics=['categorical_crossentropy'])
+        self.model.add(GlobalMaxPooling1D())
+        self.model.add(Dense(self.label_dim[1], activation='softmax'))
+        self.model.compile(loss='binary_crossentropy', optimizer='adam',
+                           metrics=[self.fbeta])
 
     def generate_dicts(self):
         iList = glob.glob(self.dPrefix)
@@ -69,5 +81,4 @@ class CNNmodel():
         validation_generator = DataGenerator(partition['validation'],
                                              labels, **params)
         self.model.fit(x=training_generator,
-                       validation_data=validation_generator,
-                       use_multiprocessing=True, workers=6)
+                       validation_data=validation_generator)
