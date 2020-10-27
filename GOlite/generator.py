@@ -1,12 +1,13 @@
 import numpy as np
 import keras
+from sklearn.model_selection import train_test_split
 
 
 class DataGenerator(keras.utils.Sequence):
     'Generates data for Keras'
 
     def __init__(self, list_IDs, labels, dim, label_dim, batch_size=32,
-                 n_channels=1, shuffle=True):
+                 n_channels=1, shuffle=True, trainSize=1):
         'Initialization'
         self.dim = dim
         self.label_dim = label_dim
@@ -15,6 +16,7 @@ class DataGenerator(keras.utils.Sequence):
         self.list_IDs = list_IDs
         self.n_channels = n_channels
         self.shuffle = shuffle
+        self.trainSize = trainSize
         self.on_epoch_end()
 
     def __len__(self):
@@ -54,4 +56,8 @@ class DataGenerator(keras.utils.Sequence):
             X = temp
             # Store class
             y = np.load(self.labels[ID])
-        return X, y
+            x_train, x_test, y_train, y_test = train_test_split(X,
+                                                                y,
+                                                                train_size=self.trainSize,
+                                                                random_state=42)
+        return x_train, y_train

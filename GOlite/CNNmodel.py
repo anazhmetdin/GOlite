@@ -72,7 +72,7 @@ class CNNmodel():
             self.list_IDs['validation'].append(iList[i])
             self.labels[iList[i]] = oList[i]
 
-    def fit_model_bitByBit(self, epochs=13, trainSize=0.2,):
+    def fit_model_bitByBit(self, epochs=13, trainSize=0.2):
         results = []
         Tlen = len(self.list_IDs["train"])
         Vlen = len(self.list_IDs["validation"])
@@ -103,20 +103,22 @@ class CNNmodel():
                                                    return_dict=True)
                 print("\t\tvalidation:", results)
 
-    def fit_model_generator(self):
+    def fit_model_generator(self, epochs=13, trainSize=0.2):
         # Parameters
         params = {'dim': tuple(self.dim),
                   'label_dim': tuple(self.label_dim),
                   'batch_size': self.batchS,
                   'n_channels': 1,
-                  'shuffle': True}
+                  'shuffle': True,
+                  'trainSize': trainSize}
         # Datasets
         partition = self.list_IDs
         labels = self.labels
         # Generators
         training_generator = DataGenerator(partition['train'], labels,
                                            **params)
+        params['trainSize'] = 1
         validation_generator = DataGenerator(partition['validation'],
                                              labels, **params)
         self.model.fit(x=training_generator,
-                       validation_data=validation_generator)
+                       validation_data=validation_generator, epochs=epochs)

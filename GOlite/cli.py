@@ -47,7 +47,7 @@ def main():
     CNN = CNNmodel(dPrefix, lPrefix, dDim, lDim, batchSize, validation,
                    filters, filterSize)
     if generator:
-        CNN.fit_model_generator()
+        CNN.fit_model_generator(epochs, trainSize)
     else:
         CNN.fit_model_bitByBit(epochs, trainSize)
     return 0
