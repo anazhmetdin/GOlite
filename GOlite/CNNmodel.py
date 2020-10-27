@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import Conv1D, Dense, GlobalMaxPooling1D
+from keras.layers import Conv1D, Dense, GlobalMaxPooling1D, MaxPooling1D
 from GOlite.generator import DataGenerator
 from keras import backend
 import glob
@@ -50,19 +50,23 @@ class CNNmodel():
         for size in range(a+step, b+1, step):
             self.model.add(Conv1D(filters=self.filters, kernel_size=size,
                                   activation='relu'))
-        self.model.add(GlobalMaxPooling1D())
+            if (size-a) % 3 == 0 and size != b:
+                self.model.add(MaxPooling1D(padding="same"))
+            if size == b:
+                self.model.add(GlobalMaxPooling1D())
         self.model.add(Dense(self.label_dim[1], activation='softmax'))
+        print(self.model.summary())
         self.model.compile(loss='binary_crossentropy', optimizer='adam',
-                           metrics=[self.fbeta])
+                           metrics=['AUC'])
 
     def generate_dicts(self):
-        iList = glob.glob(self.dPrefix)
-        oList = glob.glob(self.lPrefix)
-        for i in range(int(self.val*len(iList))-1):
-            self.list_IDs['train'].append(iList[i])
-            self.labels[iList[i]] = oList[i]
+        iList = sorted(glob.glob(self.dPrefix))
+        oList = sorted(glob.glob(self.lPrefix))
         for i in range(int(self.val*len(iList)), len(iList)):
             self.list_IDs['train'].append(iList[i])
+            self.labels[iList[i]] = oList[i]
+        for i in range(int(self.val*len(iList))-1):
+            self.list_IDs['validation'].append(iList[i])
             self.labels[iList[i]] = oList[i]
 
     def fit_model(self, testSize=0.1):
