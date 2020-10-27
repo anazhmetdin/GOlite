@@ -23,6 +23,13 @@ def main():
                         help="batch size of the generator")
     parser.add_argument("-v", "--validation", default="0.2",
                         help="validation percentage of the data")
+    parser.add_argument("-e", "--epochs", default="13",
+                        help="number of ebochs")
+    parser.add_argument("-t", "--trainingSize", default="1",
+                        help="training size of each batch")
+    parser.add_argument("-g", "--generator", default="1",
+                        help="use generator for loading data;\
+                        0: False, 1: (default) True")
     args = parser.parse_args()
 
     filters = int(args.filters)
@@ -33,10 +40,16 @@ def main():
     lDim = args.lDim
     batchSize = int(args.batchSize)
     validation = float(args.validation)
+    epochs = int(args.epochs)
+    trainSize = float(args.trainingSize)
+    generator = bool(int(args.generator))
 
     CNN = CNNmodel(dPrefix, lPrefix, dDim, lDim, batchSize, validation,
                    filters, filterSize)
-    CNN.fit_model()
+    if generator:
+        CNN.fit_model_generator()
+    else:
+        CNN.fit_model_bitByBit(epochs, trainSize)
     return 0
 
 
