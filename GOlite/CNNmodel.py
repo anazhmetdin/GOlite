@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import Conv1D, Dense, GlobalMaxPooling1D, MaxPooling1D
+from keras.layers import Dense, Flatten
 from GOlite.generator import DataGenerator
 from sklearn.model_selection import train_test_split
 from random import randint
@@ -47,17 +47,26 @@ class CNNmodel():
         a = self.filterSize[0]
         step = self.filterSize[2]
         b = self.filterSize[1]
-        self.model.add(Conv1D(filters=self.filters, kernel_size=a,
+        if len(self.dim) == 2:
+            from keras.layers import Conv1D as conv
+            from keras.layers import GlobalMaxPooling1D as GlobalMaxPooling
+            from keras.layers import MaxPooling1D as MaxPooling
+        elif len(self.dim) == 3:
+            from keras.layers import Conv2D as conv
+            from keras.layers import GlobalMaxPooling2D as GlobalMaxPooling
+            from keras.layers import MaxPooling2D as MaxPooling
+        self.model.add(conv(filters=self.filters, kernel_size=a,
                        strides=self.batchS, activation='relu',
-                       input_shape=(self.dim[1], 1)))
+                       input_shape=(*self.dim[1:], 1)))
         for size in range(a+step, b+1, step):
-            self.model.add(Conv1D(filters=self.filters, kernel_size=size,
-                                  activation='relu'))
+            self.model.add(conv(filters=self.filters, kernel_size=size,
+                                activation='relu'))
             if (size-a) % 3 == 0 and size != b:
-                self.model.add(MaxPooling1D(padding="same"))
-            if size == b:
-                self.model.add(GlobalMaxPooling1D())
-        self.model.add(Dense(self.label_dim[1], activation='softmax'))
+                self.model.add(MaxPooling(padding="same"))
+        self.model.add(GlobalMaxPooling())
+        if len(self.dim) == 3:
+            self.model.add(Flatten())
+        self.model.add(Dense(self.label_dim[1], activation='sigmoid'))
         print(self.model.summary())
         self.model.compile(loss='binary_crossentropy', optimizer='adam',
                            metrics=['AUC'])
