@@ -56,8 +56,8 @@ class DataGenerator(keras.utils.Sequence):
             X = temp
             # Store class
             y = np.load(self.labels[ID])
-            x_train, x_test, y_train, y_test = train_test_split(X,
-                                                                y,
-                                                                train_size=self.trainSize,
-                                                                random_state=42)
+            if self.trainSize != 1:
+                x_train, x_test, y_train, y_test = train_test_split(X, y,
+                                                                    train_size=self.trainSize,
+                                                                    random_state=42)
         return x_train, y_train

@@ -85,11 +85,11 @@ class CNNmodel():
                 x_train = np.load(self.list_IDs['train'][indxs[i]])
                 x_train = x_train.reshape([*x_train.shape, 1])
                 y_train = np.load(self.labels[self.list_IDs['train'][indxs[i]]])
-
-                x_train, x_test, y_train, y_test = train_test_split(x_train,
-                                                                    y_train,
-                                                                    train_size=trainSize,
-                                                                    random_state=42)
+                if trainSize != 1:
+                    x_train, x_test, y_train, y_test = train_test_split(x_train,
+                                                                        y_train,
+                                                                        train_size=trainSize,
+                                                                        random_state=42)
                 results = self.model.train_on_batch(x_train, y_train,
                                                     return_dict=True)
                 print("\t\ttraining:", results)
