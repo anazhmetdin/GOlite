@@ -107,7 +107,7 @@ class CNNmodel():
             self.list_IDs['validation'].append(iList[i])
             self.labels[iList[i]] = oList[i]
 
-    def fit_model_bitByBit(self, epochs=13, trainSize=0.2):
+    def fit_model_bitByBit(self, batch_size=10, epochs=13, trainSize=0.2):
         results = []
         Tlen = len(self.list_IDs["train"])
         Vlen = len(self.list_IDs["validation"])
@@ -115,8 +115,8 @@ class CNNmodel():
         for j in range(epochs):
             print("epoch", j+1, "/", epochs)
             np.random.shuffle(indxs)
-            for i in range(self.batchS):
-                print("\tbatch", i+1, "/", self.batchS)
+            for i in range(batch_size):
+                print("\tbatch", i+1, "/", batch_size)
                 x_train = np.load(self.list_IDs['train'][indxs[i]])
                 x_train = x_train.reshape([*x_train.shape, 1])
                 y_train = np.load(self.labels[self.list_IDs['train'][indxs[i]]])
@@ -138,11 +138,11 @@ class CNNmodel():
                                                    return_dict=True)
                 print("\t\tvalidation:", results)
 
-    def fit_model_generator(self, epochs=13, trainSize=0.2):
+    def fit_model_generator(self, batch_size=10, epochs=13, trainSize=0.2):
         # Parameters
         params = {'dim': tuple(self.dim),
                   'label_dim': tuple(self.label_dim),
-                  'batch_size': self.batchS,
+                  'batch_size': batch_size,
                   'n_channels': 1,
                   'shuffle': True,
                   'trainSize': trainSize}
