@@ -125,18 +125,32 @@ class CNNmodel():
                                                                         y_train,
                                                                         train_size=trainSize,
                                                                         random_state=42)
-                results = self.model.train_on_batch(x_train, y_train,
-                                                    return_dict=True)
+                if i == 0:
+                    results = self.model.train_on_batch(x_train, y_train,
+                                                        return_dict=True,
+                                                        reset_metrics=True)
+                else:
+                    results = self.model.train_on_batch(x_train, y_train,
+                                                        return_dict=True,
+                                                        reset_metrics=False)
                 print("\t\ttraining:", results)
 
-                val = randint(0, Vlen-1)
-                x_test = np.load(self.list_IDs['validation'][val])
+            indxs = np.arange(0, Vlen-1)
+            np.random.shuffle(indxs)
+            for i in range(10):
+                x_test = np.load(self.list_IDs['validation'][i])
                 x_test = x_test.reshape([*x_test.shape, 1])
-                y_test = np.load(self.labels[self.list_IDs['validation'][val]])
+                y_test = np.load(self.labels[self.list_IDs['validation'][i]])
 
-                results = self.model.test_on_batch(x_test, y_test,
-                                                   return_dict=True)
-                print("\t\tvalidation:", results)
+                if i == 0:
+                    results = self.model.test_on_batch(x_test, y_test,
+                                                       return_dict=True,
+                                                       reset_metrics=True)
+                else:
+                    results = self.model.test_on_batch(x_test, y_test,
+                                                       return_dict=True,
+                                                       reset_metrics=False)
+            print("\t\tvalidation:", results)
 
     def fit_model_generator(self, batch_size=10, epochs=13, trainSize=0.2):
         # Parameters
