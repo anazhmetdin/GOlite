@@ -107,7 +107,8 @@ class CNNmodel():
             self.list_IDs['validation'].append(iList[i])
             self.labels[iList[i]] = oList[i]
 
-    def fit_model_bitByBit(self, batch_size=10, epochs=13, trainSize=0.2):
+    def fit_model_bitByBit(self, filepath, batch_size=10, epochs=13,
+                           trainSize=0.2):
         results = []
         Tlen = len(self.list_IDs["train"])
         Vlen = len(self.list_IDs["validation"])
@@ -151,6 +152,10 @@ class CNNmodel():
                                                        return_dict=True,
                                                        reset_metrics=False)
             print("\t\tvalidation:", results)
+            if self.method == "CN":
+                self.model.save(filepath+"_"+self.method+"_"+j+".tf")
+            elif self.method == "DN":
+                self.model.save(filepath+"_"+self.method+"_"+self.params+"_"+j+".tf")
 
     def fit_model_generator(self, batch_size=10, epochs=13, trainSize=0.2):
         # Parameters

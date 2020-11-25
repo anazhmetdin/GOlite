@@ -34,6 +34,8 @@ def main():
                         help="what model structure to be used; CN, DN")
     parser.add_argument("-p", "--parameters", default="121",
                         help="number of parameters in case of DN model")
+    parser.add_argument("-o", "--Oprefix", default="./",
+                        help="number of parameters in case of DN model")
     args = parser.parse_args()
 
     filters = int(args.filters)
@@ -49,13 +51,14 @@ def main():
     generator = bool(int(args.generator))
     model = args.model
     params = args.parameters
+    Oprefix = args.Oprefix
 
     CNN = CNNmodel(dPrefix, lPrefix, dDim, lDim, validation,
                    filters, filterSize, model, params)
     if generator:
         CNN.fit_model_generator(batchSize, epochs, trainSize)
     else:
-        CNN.fit_model_bitByBit(batchSize, epochs, trainSize)
+        CNN.fit_model_bitByBit(Oprefix, batchSize, epochs, trainSize)
     return 0
 
 
