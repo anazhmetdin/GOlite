@@ -9,17 +9,18 @@ import glob
 
 
 class CNNmodel():
-    def __init__(self, dPrefix, lPrefix, dim, label_dim, batchS, val,
-                 filters, filterSize):
-        self.model = Sequential()
+    def __init__(self, dPrefix, lPrefix, dim, label_dim, val,
+                 filters, filterSize, method='CN', params="121"):
+        self.model = None
         self.filters = filters
         self.filterSize = [int(i) for i in filterSize.split(',')]
         self.dPrefix = dPrefix
         self.lPrefix = lPrefix
         self.dim = [int(i) for i in dim.split(',')]
         self.label_dim = [int(i) for i in label_dim.split(',')]
-        self.batchS = batchS
         self.val = val
+        self.method = method
+        self.params = params
         self.list_IDs = dict()
         self.list_IDs['train'] = list()
         self.list_IDs['validation'] = list()
@@ -44,6 +45,13 @@ class CNNmodel():
         return fbeta_score
 
     def build_model(self):
+        if self.method == "CN":
+            self.build_model_CNN()
+        elif self.method == "DN":
+            self.build_model_DenseNet()
+
+    def build_model_CNN(self):
+        self.model = Sequential()
         a = self.filterSize[0]
         step = self.filterSize[2]
         b = self.filterSize[1]
@@ -56,7 +64,7 @@ class CNNmodel():
             from keras.layers import GlobalMaxPooling2D as GlobalMaxPooling
             from keras.layers import MaxPooling2D as MaxPooling
         self.model.add(conv(filters=self.filters, kernel_size=a,
-                       strides=self.batchS, activation='relu',
+                       activation='relu',
                        input_shape=(*self.dim[1:], 1)))
         for size in range(a+step, b+1, step):
             self.model.add(conv(filters=self.filters, kernel_size=size,
@@ -68,6 +76,24 @@ class CNNmodel():
             self.model.add(Flatten())
         self.model.add(Dense(self.label_dim[1], activation='sigmoid'))
         print(self.model.summary())
+        self.model.compile(loss='binary_crossentropy', optimizer='adam',
+                           metrics=['AUC'])
+
+    def build_model_DenseNet(self):
+        if self.params == "121":
+            from keras.applications import DenseNet121 as DenseNet
+        elif self.params == "169":
+            from keras.applications import DenseNet169 as DenseNet
+        elif self.params == "201":
+            from keras.applications import DenseNet201 as DenseNet
+        self.model = DenseNet(
+            include_top=True,
+            weights=None,
+            input_tensor=None,
+            input_shape=None,
+            pooling="max",
+            classes=self.label_dim[1],
+        )
         self.model.compile(loss='binary_crossentropy', optimizer='adam',
                            metrics=['AUC'])
 

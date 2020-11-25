@@ -30,6 +30,10 @@ def main():
     parser.add_argument("-g", "--generator", default="1",
                         help="use generator for loading data;\
                         0: False, 1: (default) True")
+    parser.add_argument("-m", "--model", default="CN",
+                        help="what model structure to be used; CN, DN")
+    parser.add_argument("-p", "--parameters", default="121",
+                        help="number of parameters in case of DN model")
     args = parser.parse_args()
 
     filters = int(args.filters)
@@ -43,13 +47,15 @@ def main():
     epochs = int(args.epochs)
     trainSize = float(args.trainingSize)
     generator = bool(int(args.generator))
+    model = args.model
+    params = args.parameters
 
-    CNN = CNNmodel(dPrefix, lPrefix, dDim, lDim, batchSize, validation,
-                   filters, filterSize)
+    CNN = CNNmodel(dPrefix, lPrefix, dDim, lDim, validation,
+                   filters, filterSize, model, params)
     if generator:
-        CNN.fit_model_generator(epochs, trainSize)
+        CNN.fit_model_generator(batchSize, epochs, trainSize)
     else:
-        CNN.fit_model_bitByBit(epochs, trainSize)
+        CNN.fit_model_bitByBit(batchSize, epochs, trainSize)
     return 0
 
 
