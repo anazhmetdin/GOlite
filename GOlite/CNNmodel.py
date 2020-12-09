@@ -51,6 +51,7 @@ class CNNmodel():
             self.build_model_DenseNet()
 
     def build_model_CNN(self):
+        strides = 1
         self.model = Sequential()
         a = self.filterSize[0]
         step = self.filterSize[2]
@@ -59,13 +60,16 @@ class CNNmodel():
             from keras.layers import Conv1D as conv
             from keras.layers import GlobalMaxPooling1D as GlobalMaxPooling
             from keras.layers import MaxPooling1D as MaxPooling
+        elif len(self.dim) == 4:
+            self.dim = self.dim[:2]
+            strides = 3
         elif len(self.dim) == 3:
             from keras.layers import Conv2D as conv
             from keras.layers import GlobalMaxPooling2D as GlobalMaxPooling
             from keras.layers import MaxPooling2D as MaxPooling
         self.model.add(conv(filters=self.filters, kernel_size=a,
                        activation='relu',
-                       input_shape=(*self.dim[1:], 1)))
+                       input_shape=(*self.dim[1:], strides)))
         for size in range(a+step, b+1, step):
             self.model.add(conv(filters=self.filters, kernel_size=size,
                                 activation='relu'))
