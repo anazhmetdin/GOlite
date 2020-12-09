@@ -153,9 +153,9 @@ class CNNmodel():
                                                        reset_metrics=False)
             print("\t\tvalidation:", results)
             if self.method == "CN":
-                self.model.save(filepath+"_"+self.method+"_"+j+".tf")
+                self.model.save(filepath+"_"+self.method+"_"+str(j)+".tf")
             elif self.method == "DN":
-                self.model.save(filepath+"_"+self.method+"_"+self.params+"_"+j+".tf")
+                self.model.save(filepath+"_"+self.method+"_"+self.params+"_"+str(j)+".tf")
 
     def fit_model_generator(self, batch_size=10, epochs=13, trainSize=0.2):
         # Parameters
