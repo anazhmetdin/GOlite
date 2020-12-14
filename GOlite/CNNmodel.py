@@ -56,16 +56,22 @@ class CNNmodel():
         step = self.filterSize[2]
         b = self.filterSize[1]
         if len(self.dim) == 2:
+            input_shape = tuple([*self.dim, 1])
             from keras.layers import Conv1D as conv
             from keras.layers import GlobalMaxPooling1D as GlobalMaxPooling
             from keras.layers import MaxPooling1D as MaxPooling
-        elif len(self.dim) == 3:
+        elif len(self.dim) == 4:
+            input_shape = tuple([*self.dim[1:]])
+            from keras.layers import Conv2D as conv
+            from keras.layers import GlobalMaxPooling2D as GlobalMaxPooling
+            from keras.layers import MaxPooling2D as MaxPooling
+        if len(self.dim) == 3:
             from keras.layers import Conv2D as conv
             from keras.layers import GlobalMaxPooling2D as GlobalMaxPooling
             from keras.layers import MaxPooling2D as MaxPooling
         self.model.add(conv(filters=self.filters, kernel_size=a,
                        activation='relu',
-                       input_shape=(*self.dim[1:], 1)))
+                       input_shape=input_shape))
         for size in range(a+step, b+1, step):
             self.model.add(conv(filters=self.filters, kernel_size=size,
                                 activation='relu'))
@@ -119,7 +125,8 @@ class CNNmodel():
             for i in range(batch_size):
                 print("\tbatch", i+1, "/", batch_size)
                 x_train = np.load(self.list_IDs['train'][indxs[i]])
-                x_train = x_train.reshape([*x_train.shape, 1])
+                if len(x_train.shape) != 4:
+                    x_train = x_train.reshape([*x_train.shape, 1])
                 y_train = np.load(self.labels[self.list_IDs['train'][indxs[i]]])
                 if trainSize != 1:
                     x_train, x_test, y_train, y_test = train_test_split(x_train,
@@ -140,7 +147,8 @@ class CNNmodel():
             np.random.shuffle(indxs)
             for i in range(10):
                 x_test = np.load(self.list_IDs['validation'][i])
-                x_test = x_test.reshape([*x_test.shape, 1])
+                if len(x_train.shape) != 4:
+                    x_test = x_test.reshape([*x_test.shape, 1])
                 y_test = np.load(self.labels[self.list_IDs['validation'][i]])
 
                 if i == 0:
