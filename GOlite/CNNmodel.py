@@ -61,11 +61,12 @@ class CNNmodel():
             from keras.layers import GlobalMaxPooling1D as GlobalMaxPooling
             from keras.layers import MaxPooling1D as MaxPooling
         elif len(self.dim) == 4:
-            input_shape = tuple([*self.dim[1:]])
+            input_shape = tuple([224, 224, 3])
             from keras.layers import Conv2D as conv
             from keras.layers import GlobalMaxPooling2D as GlobalMaxPooling
             from keras.layers import MaxPooling2D as MaxPooling
         if len(self.dim) == 3:
+            input_shape = tuple([*self.dim, 1])
             from keras.layers import Conv2D as conv
             from keras.layers import GlobalMaxPooling2D as GlobalMaxPooling
             from keras.layers import MaxPooling2D as MaxPooling
@@ -121,7 +122,7 @@ class CNNmodel():
             for i in range(batch_size):
                 print("\tbatch", i+1, "/", batch_size)
                 x_train = np.load(self.list_IDs['train'][indxs[i]])
-                if self.method == "DN":
+                if self.method == "DN" or len(self.dim) == 4:
                     from cv2 import resize, INTER_AREA
                     temp = np.zeros((x_train.shape[0], 224, 224, 3))
                     for j in range(x_train.shape[0]):
@@ -154,7 +155,7 @@ class CNNmodel():
             for i in range(10):
                 x_test = np.load(self.list_IDs['validation'][i])
 
-                if self.method == "DN":
+                if self.method == "DN" or len(self.dim) == 4:
                     from cv2 import resize, INTER_AREA
                     temp = np.zeros((x_test.shape[0], 224, 224, 3))
                     for j in range(x_test.shape[0]):
