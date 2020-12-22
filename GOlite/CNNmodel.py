@@ -94,10 +94,6 @@ class CNNmodel():
             from keras.applications import DenseNet201 as DenseNet
         self.model = DenseNet(
             include_top=True,
-            weights=None,
-            input_tensor=None,
-            input_shape=None,
-            pooling="max",
             classes=self.label_dim[1],
         )
         self.model.compile(loss='binary_crossentropy', optimizer='adam',
@@ -125,6 +121,16 @@ class CNNmodel():
             for i in range(batch_size):
                 print("\tbatch", i+1, "/", batch_size)
                 x_train = np.load(self.list_IDs['train'][indxs[i]])
+                if self.method == "DN":
+                    from cv2 import resize, INTER_AREA
+                    temp = np.zeros((x_train.shape[0], 224, 224, 3))
+                    for j in range(x_train.shape[0]):
+                        x = resize(x_train[j:j+1:].reshape((x_train.shape[1],
+                                                            x_train.shape[1],
+                                                            3)),
+                                   (224, 224), interpolation=INTER_AREA)
+                        temp[j:j+1:] = x
+                    x_train = temp
                 if len(x_train.shape) != 4:
                     x_train = x_train.reshape([*x_train.shape, 1])
                 y_train = np.load(self.labels[self.list_IDs['train'][indxs[i]]])
@@ -147,6 +153,18 @@ class CNNmodel():
             np.random.shuffle(indxs)
             for i in range(10):
                 x_test = np.load(self.list_IDs['validation'][i])
+
+                if self.method == "DN":
+                    from cv2 import resize, INTER_AREA
+                    temp = np.zeros((x_test.shape[0], 224, 224, 3))
+                    for j in range(x_test.shape[0]):
+                        x = resize(x_test[j:j+1:].reshape((x_test.shape[1],
+                                                            x_test.shape[1],
+                                                            3)),
+                                   (224, 224), interpolation=INTER_AREA)
+                        temp[j:j+1:] = x
+                    x_test = temp
+
                 if len(x_train.shape) != 4:
                     x_test = x_test.reshape([*x_test.shape, 1])
                 y_test = np.load(self.labels[self.list_IDs['validation'][i]])
