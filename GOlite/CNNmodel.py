@@ -56,7 +56,7 @@ class CNNmodel():
         step = self.filterSize[2]
         b = self.filterSize[1]
         if len(self.dim) == 2:
-            input_shape = tuple([*self.dim, 1])
+            input_shape = tuple([self.dim[1], 1])
             from keras.layers import Conv1D as conv
             from keras.layers import GlobalMaxPooling1D as GlobalMaxPooling
             from keras.layers import MaxPooling1D as MaxPooling
@@ -120,7 +120,6 @@ class CNNmodel():
             print("epoch", j+1, "/", epochs)
             np.random.shuffle(indxs)
             for i in range(batch_size):
-                print("\tbatch", i+1, "/", batch_size)
                 x_train = np.load(self.list_IDs['train'][indxs[i]])
                 if self.method == "DN" or len(self.dim) == 4:
                     from cv2 import resize, INTER_AREA
@@ -148,11 +147,11 @@ class CNNmodel():
                     results = self.model.train_on_batch(x_train, y_train,
                                                         return_dict=True,
                                                         reset_metrics=False)
-                print("\t\ttraining:", results)
+                print("\r\tbatch " + str(i+1) + "/" + str(batch_size) + " " + str(results), end='')
 
-            indxs = np.arange(0, Vlen-1)
-            np.random.shuffle(indxs)
-            for i in range(10):
+            indxs1 = np.arange(0, Vlen-1)
+            np.random.shuffle(indxs1)
+            for i in range(int(0.5*len(indxs1))):
                 x_test = np.load(self.list_IDs['validation'][i])
 
                 if self.method == "DN" or len(self.dim) == 4:
@@ -178,7 +177,7 @@ class CNNmodel():
                     results = self.model.test_on_batch(x_test, y_test,
                                                        return_dict=True,
                                                        reset_metrics=False)
-            print("\t\tvalidation:", results)
+            print("\n\t\tvalidation:", results)
             if self.method == "CN":
                 self.model.save(filepath+"_"+self.method+"_"+str(j)+".tf")
             elif self.method == "DN":
