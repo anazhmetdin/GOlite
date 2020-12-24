@@ -1,5 +1,6 @@
 from keras.models import Sequential
 from keras.layers import Dense, Flatten
+from keras.models import load_model
 from GOlite.generator import DataGenerator
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
@@ -12,7 +13,7 @@ import glob
 
 class CNNmodel():
     def __init__(self, dPrefix, lPrefix, dim, label_dim, val,
-                 filters, filterSize, method='CN', params="121"):
+                 filters, filterSize, method='CN', params="121", model=""):
         self.model = None
         self.filters = filters
         self.filterSize = [int(i) for i in filterSize.split(',')]
@@ -28,11 +29,24 @@ class CNNmodel():
         self.list_IDs['validation'] = list()
         self.labels = dict()
         self.t_History = {"loss": [], "auc": [], 'MSE': [],
-                     'cat_acc':[], 'cat_crossE': []}
+                          'cat_acc': [], 'cat_crossE': []}
         self.v_History = {"loss": [], "auc": [], 'MSE': [],
-                     'cat_acc':[], 'cat_crossE': []}
+                          'cat_acc': [], 'cat_crossE': []}
         self.generate_dicts()
-        self.build_model()
+        if model == "":
+            self.build_model()
+        else:
+            print(model)
+            self.model = load_model(model)
+            history = model[:model.rfind("_")]
+            print(history)
+            with open(history+"_t_history", 'rb') as pickle_file:
+                self.t_History = pickle.load(pickle_file)
+            with open(history+"_v_history", 'rb') as pickle_file:
+                self.v_History = pickle.load(pickle_file)
+            self.model.compile(loss='binary_crossentropy', optimizer='adam',
+                               metrics=["AUC", "MSE", 'categorical_accuracy',
+                                        'categorical_crossentropy'])
 
     def fbeta(y_true, y_pred, beta=2):
         # clip predictions
@@ -219,7 +233,7 @@ class CNNmodel():
             elif self.method == "DN":
                 method_name = self.method+"_"+self.params
 
-            self.model.save(filepath+"_"+method_name+"_"+str(j)+".tf")
+            self.model.save(filepath+"_"+method_name+"_"+str(j))
 
             for metric in self.t_History:
                 plt.plot(self.t_History[metric],

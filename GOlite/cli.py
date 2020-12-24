@@ -36,6 +36,8 @@ def main():
                         help="number of parameters in case of DN model")
     parser.add_argument("-o", "--Oprefix", default="./",
                         help="number of parameters in case of DN model")
+    parser.add_argument("-M", "--modelPrefix", default="",
+                        help="file path prefix of a model to be loaded")
     args = parser.parse_args()
 
     filters = int(args.filters)
@@ -52,9 +54,10 @@ def main():
     model = args.model
     params = args.parameters
     Oprefix = args.Oprefix
+    model = args.modelPrefix
 
     CNN = CNNmodel(dPrefix, lPrefix, dDim, lDim, validation,
-                   filters, filterSize, model, params)
+                   filters, filterSize, model, params, model)
     if generator:
         CNN.fit_model_generator(batchSize, epochs, trainSize)
     else:
