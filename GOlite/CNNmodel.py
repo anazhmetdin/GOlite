@@ -139,12 +139,12 @@ class CNNmodel():
                                                                         y_train,
                                                                         train_size=trainSize,
                                                                         random_state=42)
-                if i == 0:
-                    results = self.model.train_on_batch(x_train, y_train,
-                                                        return_dict=True,
-                                                        reset_metrics=True)
-                else:
-                    results = self.model.train_on_batch(x_train, y_train,
+                # if i == 0:
+                #     results = self.model.train_on_batch(x_train, y_train,
+                #                                         return_dict=True,
+                #                                         reset_metrics=True)
+                # else:
+                results = self.model.train_on_batch(x_train, y_train,
                                                         return_dict=True,
                                                         reset_metrics=False)
                 print("\r\tbatch " + str(i+1) + "/" + str(batch_size) + " " + str(results), end='')
@@ -169,12 +169,12 @@ class CNNmodel():
                     x_test = x_test.reshape([*x_test.shape, 1])
                 y_test = np.load(self.labels[self.list_IDs['validation'][i]])
 
-                if i == 0:
-                    results = self.model.test_on_batch(x_test, y_test,
-                                                       return_dict=True,
-                                                       reset_metrics=True)
-                else:
-                    results = self.model.test_on_batch(x_test, y_test,
+                # if i == 0:
+                #     results = self.model.test_on_batch(x_test, y_test,
+                #                                        return_dict=True,
+                #                                        reset_metrics=True)
+                # else:
+                results = self.model.test_on_batch(x_test, y_test,
                                                        return_dict=True,
                                                        reset_metrics=False)
             print("\n\t\tvalidation:", results)
