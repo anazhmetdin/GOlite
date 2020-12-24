@@ -152,7 +152,7 @@ class CNNmodel():
             indxs1 = np.arange(0, Vlen-1)
             np.random.shuffle(indxs1)
             for i in range(int(0.5*len(indxs1))):
-                x_test = np.load(self.list_IDs['validation'][i])
+                x_test = np.load(self.list_IDs['validation'][indxs1[i]])
 
                 if self.method == "DN" or len(self.dim) == 4:
                     from cv2 import resize, INTER_AREA
@@ -167,7 +167,7 @@ class CNNmodel():
 
                 if len(x_train.shape) != 4:
                     x_test = x_test.reshape([*x_test.shape, 1])
-                y_test = np.load(self.labels[self.list_IDs['validation'][i]])
+                y_test = np.load(self.labels[self.list_IDs['validation'][indxs1[i]]])
 
                 # if i == 0:
                 #     results = self.model.test_on_batch(x_test, y_test,
