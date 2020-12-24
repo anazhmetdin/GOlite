@@ -84,7 +84,9 @@ class CNNmodel():
         self.model.add(Dense(self.label_dim[1], activation='sigmoid'))
         print(self.model.summary())
         self.model.compile(loss='binary_crossentropy', optimizer='adam',
-                           metrics=['AUC'])
+                           metrics=['AUC', 'categorical_accuracy',
+                                    'categorical_crossentropy',
+                                    'mean_squared_error'])
 
     def build_model_DenseNet(self):
         if self.params == "121":
@@ -112,6 +114,8 @@ class CNNmodel():
 
     def fit_model_bitByBit(self, filepath, batch_size=10, epochs=13,
                            trainSize=0.2):
+        t_History = {"loss": [], "auc": [], }
+        v_History = {""}
         results = []
         Tlen = len(self.list_IDs["train"])
         Vlen = len(self.list_IDs["validation"])
