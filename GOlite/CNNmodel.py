@@ -2,6 +2,8 @@ from keras.models import Sequential
 from keras.layers import Dense, Flatten
 from GOlite.generator import DataGenerator
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
+import pickle
 from random import randint
 import numpy as np
 from keras import backend
@@ -25,6 +27,10 @@ class CNNmodel():
         self.list_IDs['train'] = list()
         self.list_IDs['validation'] = list()
         self.labels = dict()
+        self.t_History = {"loss": [], "auc": [], 'MSE': [],
+                     'cat_acc':[], 'cat_crossE': []}
+        self.v_History = {"loss": [], "auc": [], 'MSE': [],
+                     'cat_acc':[], 'cat_crossE': []}
         self.generate_dicts()
         self.build_model()
 
@@ -84,9 +90,8 @@ class CNNmodel():
         self.model.add(Dense(self.label_dim[1], activation='sigmoid'))
         print(self.model.summary())
         self.model.compile(loss='binary_crossentropy', optimizer='adam',
-                           metrics=['AUC', 'categorical_accuracy',
-                                    'categorical_crossentropy',
-                                    'mean_squared_error'])
+                           metrics=["AUC", "MSE", 'categorical_accuracy',
+                                    'categorical_crossentropy'])
 
     def build_model_DenseNet(self):
         if self.params == "121":
@@ -100,7 +105,8 @@ class CNNmodel():
             classes=self.label_dim[1],
         )
         self.model.compile(loss='binary_crossentropy', optimizer='adam',
-                           metrics=['AUC'])
+                           metrics=["AUC", "MSE", 'categorical_accuracy',
+                                    'categorical_crossentropy'])
 
     def generate_dicts(self):
         iList = sorted(glob.glob(self.dPrefix))
@@ -114,8 +120,6 @@ class CNNmodel():
 
     def fit_model_bitByBit(self, filepath, batch_size=10, epochs=13,
                            trainSize=0.2):
-        t_History = {"loss": [], "auc": [], }
-        v_History = {""}
         results = []
         Tlen = len(self.list_IDs["train"])
         Vlen = len(self.list_IDs["validation"])
@@ -149,9 +153,23 @@ class CNNmodel():
                 #                                         reset_metrics=True)
                 # else:
                 results = self.model.train_on_batch(x_train, y_train,
-                                                        return_dict=True,
-                                                        reset_metrics=False)
-                print("\r\tbatch " + str(i+1) + "/" + str(batch_size) + " " + str(results), end='')
+                                                    return_dict=True,
+                                                    reset_metrics=False)
+                auc = results['auc']
+                loss = results['loss']
+                mse = results['MSE']
+                acc = results['categorical_accuracy']
+                crossE = results['categorical_crossentropy']
+
+                progress = str(i+1)+"/"+str(batch_size)
+                stats = " Loss: "+str(loss)+" AUC: "+str(auc)
+                print("\r\tbatch " + progress + stats, end='')
+
+            self.t_History['auc'].append(auc)
+            self.t_History['loss'].append(loss)
+            self.t_History['MSE'].append(mse)
+            self.t_History['cat_acc'].append(acc)
+            self.t_History['cat_crossE'].append(crossE)
 
             indxs1 = np.arange(0, Vlen-1)
             np.random.shuffle(indxs1)
@@ -179,13 +197,48 @@ class CNNmodel():
                 #                                        reset_metrics=True)
                 # else:
                 results = self.model.test_on_batch(x_test, y_test,
-                                                       return_dict=True,
-                                                       reset_metrics=False)
-            print("\n\t\tvalidation:", results)
+                                                   return_dict=True,
+                                                   reset_metrics=False)
+            auc = results['auc']
+            loss = results['loss']
+            mse = results['MSE']
+            acc = results['categorical_accuracy']
+            crossE = results['categorical_crossentropy']
+
+            stats = " Loss: "+str(loss)+" AUC: "+str(auc)
+            print("\n\t\tvalidation:" + stats)
+
+            self.v_History['auc'].append(auc)
+            self.v_History['loss'].append(loss)
+            self.v_History['MSE'].append(mse)
+            self.v_History['cat_acc'].append(acc)
+            self.v_History['cat_crossE'].append(crossE)
+
             if self.method == "CN":
-                self.model.save(filepath+"_"+self.method+"_"+str(j)+".tf")
+                method_name = self.method
             elif self.method == "DN":
-                self.model.save(filepath+"_"+self.method+"_"+self.params+"_"+str(j)+".tf")
+                method_name = self.method+"_"+self.params
+
+            self.model.save(filepath+"_"+method_name+"_"+str(j)+".tf")
+
+            for metric in self.t_History:
+                plt.plot(self.t_History[metric],
+                         label=metric+' (training data)')
+                plt.plot(self.v_History[metric],
+                         label=metric + ' (validation data)')
+                plt.title(metric + ' for ' + method_name)
+                plt.ylabel(metric + ' value')
+                plt.xlabel('No. epoch')
+                plt.legend(loc="upper left")
+                plt.savefig(filepath+"_"+method_name+"_"+metric+".png")
+                plt.clf()
+
+            with open(filepath+"_"+method_name+"_"+"t_history", 'wb') as file_pi:
+                pickle.dump(self.t_History, file_pi)
+            with open(filepath+"_"+method_name+"_"+"v_history", 'wb') as file_pi:
+                pickle.dump(self.v_History, file_pi)
+
+
 
     def fit_model_generator(self, batch_size=10, epochs=13, trainSize=0.2):
         # Parameters
