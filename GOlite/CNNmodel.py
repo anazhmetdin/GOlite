@@ -132,12 +132,12 @@ class CNNmodel():
                 if self.method == "DN" or len(self.dim) == 4:
                     from cv2 import resize, INTER_AREA
                     temp = np.zeros((x_train.shape[0], 224, 224, 3))
-                    for j in range(x_train.shape[0]):
-                        x = resize(x_train[j:j+1:].reshape((x_train.shape[1],
+                    for k in range(x_train.shape[0]):
+                        x = resize(x_train[k:k+1:].reshape((x_train.shape[1],
                                                             x_train.shape[1],
                                                             3)),
                                    (224, 224), interpolation=INTER_AREA)
-                        temp[j:j+1:] = x
+                        temp[k:k+1:] = x
                     x_train = temp
                 if len(x_train.shape) != 4:
                     x_train = x_train.reshape([*x_train.shape, 1])
@@ -173,23 +173,23 @@ class CNNmodel():
 
             indxs1 = np.arange(0, Vlen-1)
             np.random.shuffle(indxs1)
-            for i in range(int(0.5*len(indxs1))):
-                x_test = np.load(self.list_IDs['validation'][indxs1[i]])
+            for l in range(int(0.5*len(indxs1))):
+                x_test = np.load(self.list_IDs['validation'][indxs1[l]])
 
                 if self.method == "DN" or len(self.dim) == 4:
                     from cv2 import resize, INTER_AREA
                     temp = np.zeros((x_test.shape[0], 224, 224, 3))
-                    for j in range(x_test.shape[0]):
-                        x = resize(x_test[j:j+1:].reshape((x_test.shape[1],
+                    for k in range(x_test.shape[0]):
+                        x = resize(x_test[k:k+1:].reshape((x_test.shape[1],
                                                             x_test.shape[1],
                                                             3)),
                                    (224, 224), interpolation=INTER_AREA)
-                        temp[j:j+1:] = x
+                        temp[k:k+1:] = x
                     x_test = temp
 
                 if len(x_train.shape) != 4:
                     x_test = x_test.reshape([*x_test.shape, 1])
-                y_test = np.load(self.labels[self.list_IDs['validation'][indxs1[i]]])
+                y_test = np.load(self.labels[self.list_IDs['validation'][indxs1[l]]])
 
                 # if i == 0:
                 #     results = self.model.test_on_batch(x_test, y_test,
@@ -237,8 +237,6 @@ class CNNmodel():
                 pickle.dump(self.t_History, file_pi)
             with open(filepath+"_"+method_name+"_"+"v_history", 'wb') as file_pi:
                 pickle.dump(self.v_History, file_pi)
-
-
 
     def fit_model_generator(self, batch_size=10, epochs=13, trainSize=0.2):
         # Parameters
