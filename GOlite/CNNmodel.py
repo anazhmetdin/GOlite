@@ -36,11 +36,9 @@ class CNNmodel():
         if model == "":
             self.build_model()
         else:
-            print(model)
             self.model = load_model(model)
-            self.epochStart = int(model[model.rfind("_") + 1:])
+            self.epochStart = int(model[model.rfind("_") + 1:]) + 1
             history = model[:model.rfind("_")]
-            print(history)
             with open(history+"_t_history", 'rb') as pickle_file:
                 self.t_History = pickle.load(pickle_file)
             with open(history+"_v_history", 'rb') as pickle_file:
