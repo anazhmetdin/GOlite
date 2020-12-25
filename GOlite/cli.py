@@ -38,6 +38,10 @@ def main():
                         help="number of parameters in case of DN model")
     parser.add_argument("-M", "--modelPrefix", default="",
                         help="file path prefix of a model to be loaded")
+    parser.add_argument("-P", "--predict", default="",
+                        help="file path of encoded proteins")
+    parser.add_argument("-k", "--topK", default="",
+                        help="top k predictions")
     args = parser.parse_args()
 
     filters = int(args.filters)
@@ -55,13 +59,17 @@ def main():
     params = args.parameters
     Oprefix = args.Oprefix
     modelPrefix = args.modelPrefix
+    predict = args.predict
+    k = int(args.topK)
 
     CNN = CNNmodel(dPrefix, lPrefix, dDim, lDim, validation,
                    filters, filterSize, model, params, modelPrefix)
     if generator:
         CNN.fit_model_generator(batchSize, epochs, trainSize)
-    else:
+    elif predict == "":
         CNN.fit_model_bitByBit(Oprefix, batchSize, epochs, trainSize)
+    elif predict != "":
+        CNN.predict(predict, Oprefix, k)
     return 0
 
 

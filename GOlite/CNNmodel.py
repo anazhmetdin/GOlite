@@ -277,3 +277,20 @@ class CNNmodel():
                                              labels, **params)
         self.model.fit(x=training_generator,
                        validation_data=validation_generator, epochs=epochs)
+
+    def predict(self, targetPrefix, outPrefix, k):
+        targetList = glob.glob(targetPrefix)
+        for target in targetList:
+            x = np.load(target)
+            x = x.reshape((*x.shape, 1))
+            y = self.model.predict(x)
+            predictions = np.zeros(self.label_dim, dtype = 'uint8')
+            for i in range(y.shape[0]):
+                array = y[i]
+                flat = array.flatten()
+                indices = np.argpartition(flat, -k)[-k:]
+                indices = indices[np.argsort(-flat[indices])]
+                indices = np.unravel_index(indices, array.shape)
+                for indx in indices:
+                    predictions[i][indx] = 1
+            np.save(target.rstrip(".npy") + "_prdcts", predictions)
