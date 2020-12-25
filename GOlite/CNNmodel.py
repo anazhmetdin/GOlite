@@ -32,12 +32,14 @@ class CNNmodel():
                           'cat_acc': [], 'cat_crossE': []}
         self.v_History = {"loss": [], "auc": [], 'MSE': [],
                           'cat_acc': [], 'cat_crossE': []}
+        self.epochStart = 0
         self.generate_dicts()
         if model == "":
             self.build_model()
         else:
             print(model)
             self.model = load_model(model)
+            self.epochStart = int(model[model.rfind("_") + 1:])
             history = model[:model.rfind("_")]
             print(history)
             with open(history+"_t_history", 'rb') as pickle_file:
@@ -138,8 +140,8 @@ class CNNmodel():
         Tlen = len(self.list_IDs["train"])
         Vlen = len(self.list_IDs["validation"])
         indxs = np.arange(0, Tlen)
-        for j in range(epochs):
-            print("epoch", j+1, "/", epochs)
+        for j in range(self.epochStart, self.epochStart + epochs):
+            print("epoch", j+1, "/", self.epochStart + epochs)
             np.random.shuffle(indxs)
             for i in range(batch_size):
                 x_train = np.load(self.list_IDs['train'][indxs[i]])
