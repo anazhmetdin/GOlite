@@ -5,7 +5,6 @@ from GOlite.generator import DataGenerator
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import pickle
-from random import randint
 import numpy as np
 from keras import backend
 import glob
@@ -54,16 +53,19 @@ class CNNmodel():
         # clip predictions
         y_pred = backend.clip(y_pred, 0, 1)
         # calculate elements
-        tp = backend.sum(backend.round(backend.clip(y_true * y_pred, 0, 1)), axis=1)
-        fp = backend.sum(backend.round(backend.clip(y_pred - y_true, 0, 1)), axis=1)
-        fn = backend.sum(backend.round(backend.clip(y_true - y_pred, 0, 1)), axis=1)
+        tp = backend.sum(backend.round(backend.clip(y_true * y_pred, 0, 1)),
+                         axis=1)
+        fp = backend.sum(backend.round(backend.clip(y_pred - y_true, 0, 1)),
+                         axis=1)
+        fn = backend.sum(backend.round(backend.clip(y_true - y_pred, 0, 1)),
+                         axis=1)
         # calculate precision
         p = tp / (tp + fp + backend.epsilon())
         # calculate recall
         r = tp / (tp + fn + backend.epsilon())
         # calculate fbeta, averaged across each class
         bb = beta ** 2
-        fbeta_score = backend.mean((1 + bb) * (p * r) / (bb * p + r + backend.epsilon()))
+        fbeta_score = backend.mean((1+bb)*(p*r)/(bb*p+r+backend.epsilon()))
         return fbeta_score
 
     def build_model(self):
@@ -77,21 +79,23 @@ class CNNmodel():
         a = self.filterSize[0]
         step = self.filterSize[2]
         b = self.filterSize[1]
+        D2 = False
         if len(self.dim) == 2:
             input_shape = tuple([self.dim[1], 1])
+        elif len(self.dim) == 4:
+            input_shape = tuple([224, 224, 3])
+            D2 = True
+        elif len(self.dim) == 3:
+            input_shape = tuple([*self.dim, 1])
+            D2 = True
+        if D2:
+            from keras.layers import Conv2D as conv
+            from keras.layers import GlobalMaxPooling2D as GlobalMaxPooling
+            from keras.layers import MaxPooling2D as MaxPooling
+        else:
             from keras.layers import Conv1D as conv
             from keras.layers import GlobalMaxPooling1D as GlobalMaxPooling
             from keras.layers import MaxPooling1D as MaxPooling
-        elif len(self.dim) == 4:
-            input_shape = tuple([224, 224, 3])
-            from keras.layers import Conv2D as conv
-            from keras.layers import GlobalMaxPooling2D as GlobalMaxPooling
-            from keras.layers import MaxPooling2D as MaxPooling
-        if len(self.dim) == 3:
-            input_shape = tuple([*self.dim, 1])
-            from keras.layers import Conv2D as conv
-            from keras.layers import GlobalMaxPooling2D as GlobalMaxPooling
-            from keras.layers import MaxPooling2D as MaxPooling
         self.model.add(conv(filters=self.filters, kernel_size=a,
                        activation='relu',
                        input_shape=input_shape))
@@ -159,10 +163,10 @@ class CNNmodel():
                     x_train = x_train.reshape([*x_train.shape, 1])
                 y_train = np.load(self.labels[self.list_IDs['train'][indxs[i]]])
                 if trainSize != 1:
-                    x_train, x_test, y_train, y_test = train_test_split(x_train,
-                                                                        y_train,
-                                                                        train_size=trainSize,
-                                                                        random_state=42)
+                    x, y, z, g = train_test_split(x_train, y_train,
+                                                  train_size=trainSize,
+                                                  random_state=42)
+                    x_train, x_test, y_train, y_test = x, y, z, g
                 # if i == 0:
                 #     results = self.model.train_on_batch(x_train, y_train,
                 #                                         return_dict=True,
@@ -197,15 +201,16 @@ class CNNmodel():
                     temp = np.zeros((x_test.shape[0], 224, 224, 3))
                     for k in range(x_test.shape[0]):
                         x = resize(x_test[k:k+1:].reshape((x_test.shape[1],
-                                                            x_test.shape[1],
-                                                            3)),
+                                                           x_test.shape[1],
+                                                           3)),
                                    (224, 224), interpolation=INTER_AREA)
                         temp[k:k+1:] = x
                     x_test = temp
 
                 if len(x_train.shape) != 4:
                     x_test = x_test.reshape([*x_test.shape, 1])
-                y_test = np.load(self.labels[self.list_IDs['validation'][indxs1[l]]])
+                fileN = self.list_IDs['validation'][indxs1[l]]
+                y_test = np.load(self.labels[fileN])
 
                 # if i == 0:
                 #     results = self.model.test_on_batch(x_test, y_test,
@@ -249,9 +254,10 @@ class CNNmodel():
                 plt.savefig(filepath+"_"+method_name+"_"+metric+".png")
                 plt.clf()
 
-            with open(filepath+"_"+method_name+"_"+"t_history", 'wb') as file_pi:
+            prefix = filepath+"_"+method_name+"_"
+            with open(prefix + "t_history", 'wb') as file_pi:
                 pickle.dump(self.t_History, file_pi)
-            with open(filepath+"_"+method_name+"_"+"v_history", 'wb') as file_pi:
+            with open(prefix + "v_history", 'wb') as file_pi:
                 pickle.dump(self.v_History, file_pi)
 
     def fit_model_generator(self, batch_size=10, epochs=13, trainSize=0.2):
