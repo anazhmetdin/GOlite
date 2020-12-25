@@ -54,10 +54,10 @@ def main():
     model = args.model
     params = args.parameters
     Oprefix = args.Oprefix
-    model = args.modelPrefix
+    modelPrefix = args.modelPrefix
 
     CNN = CNNmodel(dPrefix, lPrefix, dDim, lDim, validation,
-                   filters, filterSize, model, params, model)
+                   filters, filterSize, model, params, modelPrefix)
     if generator:
         CNN.fit_model_generator(batchSize, epochs, trainSize)
     else:
