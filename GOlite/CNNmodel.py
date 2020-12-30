@@ -84,7 +84,7 @@ class CNNmodel():
             input_shape = tuple([224, 224, 3])
             D2 = True
         elif len(self.dim) == 3:
-            input_shape = tuple([*self.dim, 1])
+            input_shape = tuple([*self.dim[1:], 1])
             D2 = True
         if D2:
             from keras.layers import Conv2D as conv
