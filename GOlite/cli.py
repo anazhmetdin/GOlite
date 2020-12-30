@@ -40,7 +40,7 @@ def main():
                         help="file path prefix of a model to be loaded")
     parser.add_argument("-P", "--predict", default="",
                         help="file path of encoded proteins")
-    parser.add_argument("-k", "--topK", default="",
+    parser.add_argument("-k", "--topK", default="50",
                         help="top k predictions")
     args = parser.parse_args()
 
