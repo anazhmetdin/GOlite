@@ -146,7 +146,10 @@ class CNNmodel():
             print("epoch", j+1, "/", self.epochStart + epochs)
             np.random.shuffle(indxs)
             for i in range(batch_size):
-                x_train = np.load(self.list_IDs['train'][indxs[i]])
+                try:
+                    x_train = np.load(self.list_IDs['train'][indxs[i]])
+                except ValueError:
+                    print(self.list_IDs['train'][indxs[i]])
                 if self.method == "DN" or len(self.dim) == 4:
                     from cv2 import resize, INTER_AREA
                     temp = np.zeros((x_train.shape[0], 224, 224, 3))
@@ -205,7 +208,7 @@ class CNNmodel():
                         temp[k:k+1:] = x
                     x_test = temp
 
-                if len(x_train.shape) != 4:
+                if len(x_test.shape) != 4:
                     x_test = x_test.reshape([*x_test.shape, 1])
                 fileN = self.list_IDs['validation'][indxs1[l]]
                 y_test = np.load(self.labels[fileN])
