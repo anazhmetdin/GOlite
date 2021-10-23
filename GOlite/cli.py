@@ -3,6 +3,7 @@ import argparse
 import sys
 from GOlite.CNNmodel import CNNmodel
 
+
 def main():
     """Console script for GOlite."""
     parser = argparse.ArgumentParser()
@@ -15,10 +16,10 @@ def main():
                         help="files name pattern that only includes the data")
     parser.add_argument("-l", "--lPrefix", required=True,
                         help="files name pattern that only includes the labels")
-    parser.add_argument("-i", "--dDim", default="1000,58000", required=True,
-                        help="data dimension; default is 1000,58000")
-    parser.add_argument("-I", "--lDim", default="1000,500", required=True,
-                        help="label dimension; Defualt is 1000,500")
+    parser.add_argument("-i", "--dDim", default="50,29000", required=True,
+                        help="data dimension; default is 50,29000")
+    parser.add_argument("-I", "--lDim", default="50,1000", required=True,
+                        help="label dimension; Defualt is 50,1000")
     parser.add_argument("-b", "--batchSize", default="32",
                         help="batch size of the generator")
     parser.add_argument("-v", "--validation", default="0.2",
@@ -27,13 +28,13 @@ def main():
                         help="number of ebochs")
     parser.add_argument("-t", "--trainingSize", default="1",
                         help="training size of each batch")
-    parser.add_argument("-g", "--generator", default="1",
+    parser.add_argument("-g", "--generator", default="0",
                         help="use generator for loading data;\
-                        0: False, 1: (default) True")
+                        0: (default) False, 1: True")
     parser.add_argument("-m", "--model", default="CN",
                         help="what model structure to be used; CN, DN")
-    parser.add_argument("-p", "--parameters", default="121",
-                        help="number of parameters in case of DN model")
+    parser.add_argument("-p", "--DNdepth", default="121",
+                        help="The depth of DenseNet")
     parser.add_argument("-o", "--Oprefix", default="./",
                         help="number of parameters in case of DN model")
     parser.add_argument("-M", "--modelPrefix", default="",
@@ -56,7 +57,7 @@ def main():
     trainSize = float(args.trainingSize)
     generator = bool(int(args.generator))
     model = args.model
-    params = args.parameters
+    params = args.DNdepth
     Oprefix = args.Oprefix
     modelPrefix = args.modelPrefix
     predict = args.predict

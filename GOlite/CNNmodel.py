@@ -1,13 +1,14 @@
 from keras.models import Sequential
 from keras.layers import Dense, Flatten
 from keras.models import load_model
-from GOlite.generator import DataGenerator
+# from GOlite.generator import DataGenerator
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import pickle
 import numpy as np
 from keras import backend
 import glob
+import math
 
 
 class CNNmodel():
@@ -113,11 +114,11 @@ class CNNmodel():
 
     def build_model_DenseNet(self):
         if self.params == "121":
-            from keras.applications import DenseNet121 as DenseNet
+            from keras.applications.densenet import DenseNet121 as DenseNet
         elif self.params == "169":
-            from keras.applications import DenseNet169 as DenseNet
+            from keras.applications.densenet import DenseNet169 as DenseNet
         elif self.params == "201":
-            from keras.applications import DenseNet201 as DenseNet
+            from keras.applications.densenet import DenseNet201 as DenseNet
         self.model = DenseNet(
             include_top=True,
             classes=self.label_dim[1],
@@ -162,7 +163,8 @@ class CNNmodel():
                     x_train = temp
                 if len(x_train.shape) != 4:
                     x_train = x_train.reshape([*x_train.shape, 1])
-                y_train = np.load(self.labels[self.list_IDs['train'][indxs[i]]])
+                y_train = np.load(
+                    self.labels[self.list_IDs['train'][indxs[i]]])
                 if trainSize != 1:
                     x, y, z, g = train_test_split(x_train, y_train,
                                                   train_size=trainSize,
@@ -261,39 +263,56 @@ class CNNmodel():
             with open(prefix + "v_history", 'wb') as file_pi:
                 pickle.dump(self.v_History, file_pi)
 
-    def fit_model_generator(self, batch_size=10, epochs=13, trainSize=0.2):
-        # Parameters
-        params = {'dim': tuple(self.dim),
-                  'label_dim': tuple(self.label_dim),
-                  'batch_size': batch_size,
-                  'n_channels': 1,
-                  'shuffle': True,
-                  'trainSize': trainSize}
-        # Datasets
-        partition = self.list_IDs
-        labels = self.labels
-        # Generators
-        training_generator = DataGenerator(partition['train'], labels,
-                                           **params)
-        params['trainSize'] = 1
-        validation_generator = DataGenerator(partition['validation'],
-                                             labels, **params)
-        self.model.fit(x=training_generator,
-                       validation_data=validation_generator, epochs=epochs)
+            x = 4
+            y = 3
+            x+1
+            z = 3
+
+    # def fit_model_generator(self, batch_size=10, epochs=13, trainSize=0.2):
+    #     # Parameters
+    #     params = {'dim': tuple(self.dim),
+    #               'label_dim': tuple(self.label_dim),
+    #               'batch_size': batch_size,
+    #               'n_channels': 1,
+    #               'shuffle': True,
+    #               'trainSize': trainSize}
+    #     # Datasets
+    #     partition = self.list_IDs
+    #     labels = self.labels
+    #     # Generators
+    #     training_generator = DataGenerator(partition['train'], labels,
+    #                                        **params)
+    #     params['trainSize'] = 1
+    #     validation_generator = DataGenerator(partition['validation'],
+    #                                          labels, **params)
+    #     self.model.fit(x=training_generator,
+    #                    validation_data=validation_generator, epochs=epochs)
 
     def predict(self, targetPrefix, outPrefix, k):
         targetList = glob.glob(targetPrefix)
+        from cv2 import resize, INTER_AREA
         for target in targetList:
             x = np.load(target)
-            x = x.reshape((*x.shape, 1))
+            temp = np.zeros((50, 224, 224, 3))
+            for k in range(x.shape[0]):
+                temp[k] = resize(x[k], (224, 224), interpolation=INTER_AREA)
+            x = temp
             y = self.model.predict(x)
-            predictions = np.zeros(self.label_dim, dtype = 'uint8')
+            predictions = np.zeros(self.label_dim, dtype='uint8')
+            percentages = np.zeros(self.label_dim, dtype='uint8')
             for i in range(y.shape[0]):
                 array = y[i]
                 flat = array.flatten()
                 indices = np.argpartition(flat, -k)[-k:]
                 indices = indices[np.argsort(-flat[indices])]
                 indices = np.unravel_index(indices, array.shape)
+                indices = list(indices[0])
+                base = y[i][indices[0]]
                 for indx in indices:
                     predictions[i][indx] = 1
+                    if math.isnan((y[i][indx]/base)):
+                        percentages[i][indx] = 0.01
+                    else:
+                        percentages[i][indx] = int((y[i][indx]/base)*100)
             np.save(target.rstrip(".npy") + "_prdcts", predictions)
+            np.save(target.rstrip(".npy") + "_prdctsCert", percentages)
